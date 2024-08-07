@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 import scipy.special as spe
-from tools_MO.hydrogen import H_real_p
+from .hydrogen import H_real_p
 
 def genDensity(length, width, height, nl, nw, nh, l0, w0, h0, inFunc):
     '''
