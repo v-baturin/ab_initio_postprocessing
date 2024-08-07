@@ -16,7 +16,7 @@ from my_packages.hydrures_tools.various_tools import fix_wrap_and_check_tetrahed
 atomistic = Atomistic()
 
 
-def remove_duplicates_from_files(struct_file: os.PathLike, individuals_file: os.PathLike, out_path=None,
+def remove_duplicates_from_files(struct_file: os.PathLike, individuals_file: os.PathLike|None =None, out_path=None,
                                  individuals_header='', threshold=np.inf,
                                  clusters_file=None, dist_matrix_file=None,
                                  check_clusters_file=True, check_dist_matrix_file=True,
@@ -32,9 +32,12 @@ def remove_duplicates_from_files(struct_file: os.PathLike, individuals_file: os.
     @return: None
     """
     systems = readAtomicStructuresToPoolEntries(struct_file)
-    fitnesses = np.array(read_Individuals_uspexPY(individuals_file)[individuals_header])
-    fitnesses = fitnesses[fitnesses != 'None'].astype(float).flatten()
-    systems = systems[:len(fitnesses)]
+    if individuals_file is not None:
+        fitnesses = np.array(read_Individuals_uspexPY(individuals_file)[individuals_header])
+        fitnesses = fitnesses[fitnesses != 'None'].astype(float).flatten()
+        systems = systems[:len(fitnesses)]
+    else:
+        fitnesses = None
 
     data_path = struct_file.parent
     clusters_file = data_path / f"clusters_{tdy}.pkl" if clusters_file is None else clusters_file
@@ -86,9 +89,13 @@ def prepare_dist_function(systems, legacy=False):
     return rho
 
 
-def select_best_representatives(clusters, systems, fitnesses, threshold, **kwargs):
+def select_best_representatives(clusters, systems, fitnesses = None, threshold = 0.1, **kwargs):
     print(f"Processing {len(clusters)} clusters")
-    ref_fitness = np.min(fitnesses)
+    if fitnesses is not None:
+        ref_fitness = np.min(fitnesses)
+    else:
+        fitnesses = np.zeros(len(systems), dtype=float)
+        ref_fitness = 0.
     good_fitnesses = []
     i = 0
     best_of_each = []
