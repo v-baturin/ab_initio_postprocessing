@@ -1,3 +1,5 @@
+import torch
+import numpy as np
 import pandas as pd
 from .crystal_dataset import CrystalDataset
 from .crystal_entry import CrystalEntry
@@ -37,4 +39,12 @@ def cell_pos_atomtypes_from_pmg_structure(structure):
     pbc = [True, True, True]  # pymatgen structures are fully periodic
 
     return cell, positions, atom_types
+
+def pmg_structure_to_torch_cell_frac_atomnumbers(structure):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    cell = torch.tensor(structure.lattice.matrix, dtype=torch.float64, device=device)
+    frac = torch.tensor(structure.lattice.get_fractional_coords(structure.cart_coords), dtype=torch.float64, device=device)
+    atomic_numbers = torch.tensor(structure.atomic_numbers, dtype=torch.int64, device=device)
+    return cell, frac, atomic_numbers
 

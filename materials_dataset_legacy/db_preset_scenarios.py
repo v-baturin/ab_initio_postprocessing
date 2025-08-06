@@ -1,9 +1,9 @@
 from datetime import datetime
 import numpy as np
-from my_packages.materials_tools.materials_dataset.crystalDataset import CrystalDataset
-from my_packages.materials_tools.materials_dataset.db_clients.alexandria_client import AlexandriaClient
-from my_packages.materials_tools.materials_dataset.db_clients.oqmd_client import OQMDClient
-from my_packages.materials_tools.materials_dataset.db_clients.mp_client import MPClient
+from materials_tools.materials_dataset.crystalDataset import CrystalDataset
+from materials_tools.materials_dataset.db_clients.alexandria_client import AlexandriaClient
+from materials_tools.materials_dataset.db_clients.oqmd_client import OQMDClient
+from materials_tools.materials_dataset.db_clients.mp_client import MPClient
 
 elements = ["Mo", "Si", "B", "P"]
 do_ehull_filtering = True  # Whether to filter entries based on energy above hull

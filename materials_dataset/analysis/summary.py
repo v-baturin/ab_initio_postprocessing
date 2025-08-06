@@ -131,10 +131,11 @@ def print_pretty_df(df, dump_path, columns=None, sort_by=None, pretty=True, ):
     if pretty:
         pt = PrettyTable()
         pt.field_names = columns
-
+        float_fmt = "{:.4f}".format
         # Slice df to just the chosen columns, then iterate
         for row in df[columns].itertuples(index=False, name=None):
-            pt.add_row(row)
+            formatted_row = [float_fmt(x) if isinstance(x, float) else x for x in row]
+            pt.add_row(formatted_row)
 
         # Write the table string to a file
         with open(dump_path, "w") as file:

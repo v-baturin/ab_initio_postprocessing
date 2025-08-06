@@ -94,51 +94,51 @@ class Fingerprint(Mapping):
         return dist
 
 
-class ComplexFingerprint:
-    """
-    Class representing radial distribution fingerprint.
-    """
-
-    def __init__(self, values, symbols):
-        self.values = {}
-        for s, v in values.items():
-            self.values[s] = np.asarray(v, dtype=float)
-        self.symbols = symbols
-
-    @staticmethod
-    def fromAtomicFingerprints(symbols, atomTypes, atomFings):
-        fing = {}
-        for atomType, aFing in zip(atomTypes, atomFings):
-            symbol = atomType.short_name
-            row = np.hstack([aFing[s] * np.sqrt(aFing.weights[s] if s in aFing.weights else 0) for s in symbols])
-            if symbol not in fing:
-                fing[symbol] = []
-            fing[symbol].append(row)
-        return ComplexFingerprint(fing, symbols)
-
-    @staticmethod
-    def cosineDistance(fing1, fing2):
-        """
-        Calculation of cosine distances using eq.(6b) from JCP-2009.
-        """
-        norm1 = np.linalg.norm(fing1, axis=1).reshape((-1, 1))
-        norm2 = np.linalg.norm(fing2, axis=1).reshape((1, -1))
-        return (1 - np.dot(fing1, fing2.T) / (norm1 * norm2)) / 2
-
-    @staticmethod
-    def dist(fingerprint1, fingerprint2):
-        assert set(fingerprint1.symbols) == set(fingerprint2.symbols)
-        index1 = fingerprint1.values.keys()
-        index2 = fingerprint2.values.keys()
-        dist = 0
-        for symbol in fingerprint1.symbols:
-            if symbol in index1 and symbol in index2:
-                distMatrix = ComplexFingerprint.cosineDistance(fingerprint1.values[symbol], fingerprint2.values[symbol])
-                dist += (distMatrix.min(axis=0).mean() +
-                         distMatrix.min(axis=1).mean()) / 2
-            elif symbol in index1 or symbol in index2:
-                dist += 0.5
-        return dist
+# class ComplexFingerprint:
+#     """
+#     Class representing radial distribution fingerprint.
+#     """
+#
+#     def __init__(self, values, symbols):
+#         self.values = {}
+#         for s, v in values.items():
+#             self.values[s] = np.asarray(v, dtype=float)
+#         self.symbols = symbols
+#
+#     @staticmethod
+#     def fromAtomicFingerprints(symbols, atomTypes, atomFings):
+#         fing = {}
+#         for atomType, aFing in zip(atomTypes, atomFings):
+#             symbol = atomType.short_name
+#             row = np.hstack([aFing[s] * np.sqrt(aFing.weights[s] if s in aFing.weights else 0) for s in symbols])
+#             if symbol not in fing:
+#                 fing[symbol] = []
+#             fing[symbol].append(row)
+#         return ComplexFingerprint(fing, symbols)
+#
+#     @staticmethod
+#     def cosineDistance(fing1, fing2):
+#         """
+#         Calculation of cosine distances using eq.(6b) from JCP-2009.
+#         """
+#         norm1 = np.linalg.norm(fing1, axis=1).reshape((-1, 1))
+#         norm2 = np.linalg.norm(fing2, axis=1).reshape((1, -1))
+#         return (1 - np.dot(fing1, fing2.T) / (norm1 * norm2)) / 2
+#
+#     @staticmethod
+#     def dist(fingerprint1, fingerprint2):
+#         assert set(fingerprint1.symbols) == set(fingerprint2.symbols)
+#         index1 = fingerprint1.values.keys()
+#         index2 = fingerprint2.values.keys()
+#         dist = 0
+#         for symbol in fingerprint1.symbols:
+#             if symbol in index1 and symbol in index2:
+#                 distMatrix = ComplexFingerprint.cosineDistance(fingerprint1.values[symbol], fingerprint2.values[symbol])
+#                 dist += (distMatrix.min(axis=0).mean() +
+#                          distMatrix.min(axis=1).mean()) / 2
+#             elif symbol in index1 or symbol in index2:
+#                 dist += 0.5
+#         return dist
 
 
 class RadialDistributionUtility(object):
@@ -148,7 +148,7 @@ class RadialDistributionUtility(object):
 
     def __init__(self, symbols, suffix, Rmax=RMAX_DEFAULT, sigma=SIGMA_DEFAULT, delta=DELTA_DEFAULT,
                  tolerance=TOLERANCE_DEFAULT, storeDistances=True,
-                 legacy=False, **kwargs):
+                 legacy=True, **kwargs):
         """
         :type Rmax: float
         :param Rmax: threshold distance between i-th anf j-th atom.
