@@ -157,7 +157,7 @@ def remove_duplicates_from_files(struct_file: Path,
     #     out_path = struct_file.parent / 'clearedPOSCAR'
     # remove_duplicates(systems, fitnesses, outfile_root=out_path, **kwargs)
 
-def prepare_dist_function(systems, legacy=False, elements=None, **kwargs):
+def prepare_dist_function(systems, legacy=True, elements=None, **kwargs):
     if elements is None:
         elements = set()
         for system in systems:

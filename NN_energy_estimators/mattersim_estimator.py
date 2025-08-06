@@ -7,10 +7,10 @@ other_python = "/home/vsbat/work/mattergen/mattergenbis/.venv/bin/python"
 energy_cli_single   = (Path(__file__).parent / "mattersim_helper_single.py").as_posix()
 energy_worker = (Path(__file__).parent / "mattersim_helper_batch.py").as_posix()
 
-def get_energy(atoms):
+def get_energy(atms):
     # ---- serialise the structure to an in-memory JSON string -------------
     buf = io.StringIO()
-    write(buf, atoms, format="json")
+    write(buf, atms, format="json")
     json_atoms = buf.getvalue()
 
     # ---- call the calculator python and feed it via stdin ----------------
