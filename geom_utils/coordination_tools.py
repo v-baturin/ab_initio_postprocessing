@@ -1,3 +1,4 @@
+from typing import Callable
 import numpy as np
 from ase.io import read
 import torch
@@ -7,16 +8,20 @@ from itertools import product
 # SIGMOID = lambda dist, cutoff, delta: 1.0 / (1.0 + np.exp((dist - cutoff) / delta))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def _compute_species_pair_single(
+_STANDARD_KERNELS = {"gaussian": lambda dist, sigma=1.0, **kwargs: torch.exp(- (dist / sigma).pow(2)),
+                  "sigmoid": lambda dist, alpha=8.0, r_cut=None, **kwargs: torch.sigmoid(alpha * (r_cut - dist))}
+
+def compute_species_pair(
         cell: torch.Tensor,
         frac: torch.Tensor,
         types: torch.Tensor,
         type_A: int,
         type_B: int,
-        kernel: str = "gaussian",
+        kernel: Callable | str = "sigmoid",
         sigma: float = 1.0,
         r_cut: float | None = None,
-        alpha: float = 8.0
+        alpha: float = 8.0,
+        **kwargs
 ) -> torch.Tensor:
     """
     Compute a differentiable species‐pair value f[A,B], where
@@ -26,19 +31,22 @@ def _compute_species_pair_single(
       - Soft‐cutoff:   sigmoid(alpha * (r_cut − d))
 
     Args:
-      cell      (3×3) Tensor: rows are lattice vectors.
-      frac      (N×3) Tensor: fractional coords.
-      types     list of N ints: atomic numbers.
-      type_A    int: atomic number of species A (the one we want to compute the environment of).
-      type_B    int: atomic number of species B (the one we are looking in the environment of species A).
-      kernel    "gaussian" or "sigmoid"
-      sigma     width for Gaussian (Å)
-      r_cut     cutoff for sigmoid (Å)
-      alpha     sharpness for sigmoid
+      :param cell:      (3×3) Tensor: rows are lattice vectors.
+      :param frac:     (N×3) Tensor: fractional coords.
+      :param types     list of N ints: atomic numbers.
+      :param type_A    int: atomic number of species A (the one we want to compute the environment of).
+      :param type_B    int: atomic number of species B (the one we are looking in the environment of species A).
+      :param kernel    callable or str ("gaussian" or "sigmoid" supported)
+      :param sigma     width for Gaussian (Å)
+      :param r_cut     cutoff for sigmoid (Å)
+      :param alpha     sharpness for sigmoid
 
     Returns:
       f_AB (scalar Tensor), with gradients flowing to cell and positions.
     """
+
+    kernel = kernel if hasattr(kernel, "__call__") else _STANDARD_KERNELS[kernel]
+
     type_A = atomic_numbers[type_A] if isinstance(type_A, str) else type_A
     type_B = atomic_numbers[type_B] if isinstance(type_B, str) else type_B
     device = frac.device
@@ -76,12 +84,7 @@ def _compute_species_pair_single(
     dist = dc.norm(dim=-1)  # (n_A, n_B*27)
 
     # Kernel
-    if kernel == "gaussian":
-        G = torch.exp(- (dist / sigma).pow(2))
-    elif kernel == "sigmoid":
-        G = torch.sigmoid(alpha * (r_cut - dist))
-    else:
-        raise ValueError("kernel must be 'gaussian' or 'sigmoid'")
+    G = kernel(dist, alpha=alpha, r_cut=r_cut, sigma=sigma, **kwargs)
 
     # Sum over all pairs
     n_A = mask_A.sum()
@@ -91,7 +94,7 @@ def _compute_species_pair_single(
     f_AB = G.sum() / n_A - int(type_A == type_B)  # Subtract self-interaction
     return f_AB
 
-def compute_species_pair(atoms, type_A, type_B, kernel="gaussian", sigma=1.0, r_cut=None, alpha=8.0):
+def compute_species_pair_atoms(atoms, type_A, type_B, kernel="gaussian", sigma=1.0, r_cut=None, alpha=8.0):
     """
     Compute the species pair value for a given structure.
 
@@ -112,7 +115,7 @@ def compute_species_pair(atoms, type_A, type_B, kernel="gaussian", sigma=1.0, r_
     frac = torch.tensor(atoms.get_scaled_positions(), dtype=torch.float64, device=device)
     atomic_numbers = torch.tensor(atoms.get_atomic_numbers(), dtype=torch.int64, device=device)
 
-    return _compute_species_pair_single(cell, frac, atomic_numbers, type_A, type_B, kernel, sigma, r_cut, alpha)
+    return compute_species_pair(cell, frac, atomic_numbers, type_A, type_B, kernel, sigma, r_cut, alpha)
 
 # Usage example:
 # counts = count_neighbors('POSCAR', delta=0.15)
