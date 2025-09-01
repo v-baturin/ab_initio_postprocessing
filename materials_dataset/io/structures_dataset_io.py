@@ -122,7 +122,7 @@ class StructureDatasetIO:
             struct = _safe_structure_from_file(file)
             if struct:
                 entries.append(CrystalEntry(id=next(self._id_iter), structure=struct,
-                                            metadata={"source": self.source_name}))
+                                            metadata={"source": self.source_name, "file": file.name}))
 
         # 2) structures inside archives (if requested)
         if use_archives:
@@ -131,7 +131,7 @@ class StructureDatasetIO:
                     struct = _safe_structure_from_file(file)
                     if struct:
                         entries.append(CrystalEntry(id=next(self._id_iter), structure=struct,
-                                                    metadata={"source": self.source_name}))
+                                                    metadata={"source": self.source_name, "file": file.name }))
         if elements:
             entries = [e for e in entries if not (set(e.composition.as_data_dict()["elements"]) - set(elements))]
         msg = message or f"Structures collected from {self.root}"
