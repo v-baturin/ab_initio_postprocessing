@@ -18,7 +18,7 @@ def _copy_zips_preserving_tree(src_root: Path, dest_root: Path) -> None:
         rel_path = z.relative_to(src_root)
         target = dest_root / rel_path
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(z, target)
+        shutil.copy2(z, target) # unlike shutil.copy(), preserves as much metadata as possible (timestamps etc.)
 
 
 def _unzip_in_place(root: Path) -> None:

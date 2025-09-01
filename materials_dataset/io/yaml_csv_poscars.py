@@ -16,7 +16,7 @@ def _get_str_value_for_csv(e: CrystalEntry, attr_name):
     if isinstance(val, float):
         val = f"{val:.4f}"
     else:
-        val = str(val)
+        val = str(val).strip()
     return val
 
 def _remove_private_keys(dct, recursive=True):
