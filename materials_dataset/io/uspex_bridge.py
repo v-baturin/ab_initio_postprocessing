@@ -8,6 +8,7 @@ from USPEX.DataModel.Flavour import Flavour
 from USPEX.DataModel.Entry import Entry
 import numpy as np
 from USPEX.Atomistic.RadialDistributionUtility import RadialDistributionUtility, TOLERANCE_DEFAULT
+from ..analysis.structural_distance.USPEX_fp import RadialDistributionUtility as RD2
 from .structures_dataset_io import StructureDatasetIO
 
 Engine.createEngine(":memory:")
@@ -15,10 +16,14 @@ atomistic = Atomistic()
 
 
 class USPEXBridge:
-    def __init__(self, elements, legacy=True, tol_FP=None):
+    def __init__(self, elements, legacy=True, tol_FP=None, new_fp=False):
         self.tol_FP = tol_FP or TOLERANCE_DEFAULT
-        self.rdu = RadialDistributionUtility(symbols=elements,
-                                             suffix='origin', legacy=legacy, tolerance=self.tol_FP, storeDistances=False)
+        if new_fp:
+            self.rdu = RD2(symbols=elements,
+                           suffix='origin', legacy=legacy, tolerance=self.tol_FP, storeDistances=False)
+        else:
+            self.rdu = RadialDistributionUtility(symbols=elements,
+                                                 suffix='origin', legacy=legacy, tolerance=self.tol_FP, storeDistances=False)
         self.uspex_entry_extensions = dict(atomistic=(atomistic, atomistic.propertyExtension.propertyTable),
                           radialDistributionUtility=(self.rdu, self.rdu.propertyExtension.propertyTable))
         self.id=-1
