@@ -1,6 +1,8 @@
 from typing import Dict
 from collections import defaultdict
+from pathlib import Path
 from ..crystal_dataset import CrystalDataset
+from ..io.yaml_csv_poscars import read, write
 from ..io.preset_loaders import load_from_alexandria, load_from_oqmd, load_from_materials_project
 from ..analysis.phase_diagram_tools import PhaseDiagramTools
 
@@ -16,12 +18,22 @@ def poll_databases(elements,
                    do_ehull_filtering=True,
                    do_deduplication=True,
                    max_ehull=None,
-                   loader_kwargs: Dict | None =None):
+                   loader_kwargs: Dict | None =None,
+                   cache_manifest_path: Path | None = None):
     """
     Fetch data from Alexandria, OQMD, and Materials Project databases.
     Data is first taken from the reference database (Alexandria) then only the structures unseen in the reference DB
     are added.
     """
+    
+    if cache_manifest_path.exists():
+        polled_db = read(cache_manifest_path)
+        assert set(polled_db.elements) == set(elements), "Requested elements set mismatch with cached data"
+        return polled_db
+    else:
+        print("Failed to read cached database")
+        
+    
     if loader_kwargs is None: loader_kwargs = dict()
 
     if do_deduplication:
@@ -60,4 +72,6 @@ def poll_databases(elements,
         reference_data = reference_data.merge(loaded_ds)
     msg = (f"Gathered from {', '.join(database_names)} databases "
            f"with elements: {', '.join(elements)}")
-    return CrystalDataset([e.copy_with(**{'energy': None}) for e in reference_data], message=msg)
+    ds = CrystalDataset([e.copy_with(**{'energy': None}) for e in reference_data], message=msg)
+    write(ds, enforce_base_path=cache_manifest_path)
+    return ds
