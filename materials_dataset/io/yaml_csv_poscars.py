@@ -14,7 +14,7 @@ def _get_str_value_for_csv(e: CrystalEntry, attr_name):
     else:
         val = getattr(e, attr_name)
     if isinstance(val, float):
-        val = f"{val:.4f}"
+        val = f"{val:.6f}"
     else:
         val = str(val).strip()
     return val

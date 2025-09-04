@@ -19,16 +19,17 @@ def poll_databases(elements,
                    do_deduplication=True,
                    max_ehull=None,
                    loader_kwargs: Dict | None =None,
-                   cache_manifest_path: Path | None = None):
+                   cache_base_path: Path | None = None):
     """
     Fetch data from Alexandria, OQMD, and Materials Project databases.
     Data is first taken from the reference database (Alexandria) then only the structures unseen in the reference DB
     are added.
     """
     
-    if cache_manifest_path.exists():
-        polled_db = read(cache_manifest_path)
+    if cache_base_path.exists():
+        polled_db = read(cache_base_path / "manifest.yaml")
         assert set(polled_db.elements) == set(elements), "Requested elements set mismatch with cached data"
+        print(f"Data for elements {' '.join(elements)} read from cache")
         return polled_db
     else:
         print("Failed to read cached database")
@@ -73,5 +74,5 @@ def poll_databases(elements,
     msg = (f"Gathered from {', '.join(database_names)} databases "
            f"with elements: {', '.join(elements)}")
     ds = CrystalDataset([e.copy_with(**{'energy': None}) for e in reference_data], message=msg)
-    write(ds, enforce_base_path=cache_manifest_path)
+    write(ds, enforce_base_path=cache_base_path)
     return ds

@@ -52,7 +52,8 @@ class PPPipeline:
         return self.toolkits[toolkit_name]
 
 
-    def run(self, to_process: list | None = None, ) -> Generator[Tuple[PostprocessStage,CrystalDataset], None, None]:
+    def run(self, to_process: list | None = None,
+            elements_refdata_cache: Path | None = None) -> Generator[Tuple[PostprocessStage,CrystalDataset], None, None]:
         to_process = to_process or [stage for stage in PostprocessStage if stage not in self.processed_stages]
         for stage in to_process:
 
@@ -70,7 +71,7 @@ class PPPipeline:
 
             if stage is PostprocessStage.poll_db:
                 elements = self.processed_stages[PostprocessStage.parse_raw].elements
-                self.processed_stages[stage] = poll_databases(elements)
+                self.processed_stages[stage] = poll_databases(elements, cache_base_path=elements_refdata_cache)
 
             if stage is PostprocessStage.augment_raw_by_db:
                 similarity_tk: SimilarityTools = self.get_tool("similarity")
