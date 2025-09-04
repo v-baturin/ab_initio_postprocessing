@@ -1,6 +1,5 @@
 from pathlib import Path
 from functools import lru_cache
-
 from ..crystal_dataset import CrystalDataset, CrystalEntry
 from USPEX.components import Atomistic
 from USPEX.DataModel.Engine import Engine
@@ -21,9 +20,16 @@ class USPEXBridge:
                                              suffix='origin', legacy=legacy, tolerance=self.tol_FP, storeDistances=False)
         self.uspex_entry_extensions = dict(atomistic=(atomistic, atomistic.propertyExtension.propertyTable),
                           radialDistributionUtility=(self.rdu, self.rdu.propertyExtension.propertyTable))
+        self._sig = (tuple(elements), bool(legacy), self.tol_FP)
         self.id=-1
 
-    @lru_cache(maxsize=1000)
+    def __hash__(self):
+        return hash(self._sig)
+
+    def __eq__(self, other):
+        return isinstance(other, USPEXBridge) and self._sig == other._sig
+
+    @lru_cache(maxsize=5000)
     def uspex_entry_from_de(self, de_entry: CrystalEntry) -> "Entry":
         types, coords, cell = ([atomistic.atomType(s.species_string) for s in de_entry.structure],
                                de_entry.structure.cart_coords,
